@@ -15,6 +15,8 @@
  * than the GPIO indices and using SPMI based USB Type-C port controllers.
  */
 
+#define ENABLE_DCPEXT_TYPEC
+
 #include <dt-bindings/leds/common.h>
 
 / {
@@ -27,6 +29,9 @@
 		bluetooth0 = &bluetooth0;
 		dcp = &dcp;
 		dcpext0 = &dcpext0;
+#ifdef ENABLE_DCPEXT_TYPEC
+		dcpext1 = &dcpext1;
+#endif
 		disp0 = &display;
 		disp0-piodma = &disp0_piodma;
 		serial0 = &serial0;
@@ -153,6 +158,48 @@
 	iommus = <&disp0_dart 0 0x100 0x0 0x10 0x0>,
 		<&dispext0_dart 0 0x100 0x0 0x10 0x0>;
 };
+
+#ifdef ENABLE_DCPEXT_TYPEC
+
+&display {
+	iommus = <&disp0_dart 0 0x100 0x0 0x10 0x0>,
+		<&dispext0_dart 0 0x100 0x0 0x10 0x0>,
+		<&dispext1_dart 0 0x100 0x0 0x10 0x0>;
+};
+
+&dispext1_dart {
+	status = "okay";
+};
+
+&dcpext1_dart {
+	status = "okay";
+};
+
+&dcpext1_mbox {
+	status = "okay";
+};
+
+&dcpext1 {
+	status = "okay";
+	apple,connector-type = "DP";
+
+	/* hacks */
+	apple,dptx-phy = <1>;
+	phys = <&atcphy1 PHY_TYPE_DP>;
+	phy-names = "dp-phy";
+	mux-controls = <&atcphy1_xbar 0>;
+	mux-control-names = "dp-xbar";
+	mux-index = <2>;
+};
+
+//&dpaudio2 {
+//	status = "okay";
+//};
+
+&atcphy1_xbar {
+	 status = "okay";
+};
+#endif
 
 &serial0 {
 	status = "okay";
@@ -442,6 +489,11 @@
 			label = "USB-C Left Front";
 			power-role = "dual";
 			data-role = "dual";
+
+#ifdef ENABLE_DCPEXT_TYPEC
+			/* hacks */
+			displayport = <&dcpext1>;
+#endif
 
 			ports {
 				#address-cells = <1>;
